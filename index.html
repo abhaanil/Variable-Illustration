@@ -1,0 +1,128 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>a chair that adjusts</title>
+<style>
+    @font-face {
+        font-family: ChairVF;
+        src: url("./ChairVF.ttf?v=1") format("truetype");
+        /* or .woff2 */
+    }
+
+    html,
+    body {
+        height: 100%;
+        margin: 0
+    }
+
+    body {
+        font-family: system-ui, sans-serif;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        background: #C4D3E7;
+        color: #FD5236
+    }
+
+    header {
+        padding: 10px 14px;
+        background: #C4D3E7;
+
+    }
+
+    .controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        font-size: 14px
+    }
+
+    button {
+        background: #1a1b20;
+        color: #FD5236;
+        border: 1px solid #2a2b33;
+        border-radius: 10px;
+        padding: 6px 8px
+    }
+
+    .stage {
+        position: relative;
+        display: grid;
+        place-items: center
+    }
+
+    #g {
+        font-family: ChairVF;
+        /* IMPORTANT: use your actual tags from FontGauntlet */
+        font-variation-settings: "rxad" 100, "ryad" 100;
+        /* if you exported COLR palettes, you can show them: */
+        font-palette: palette(0);
+        font-size: clamp(500px, 100vw, 1200px);
+        /* Bigger! */
+        line-height: 1;
+        user-select: none;
+        will-change: font-variation-settings;
+    }
+
+    .hint {
+        position: absolute;
+        bottom: 14px;
+        left: 14px;
+        right: 14px;
+        font-size: 12px;
+        opacity: .65
+    }
+</style>
+
+<header>
+    <div class="controls">
+        <div id="ro">rxad: 100 | ryad: 100</div>
+        <!-- <button data-x="100" data-y="100">Bottom-Left (100,100)</button>
+        <button data-x="100" data-y="900">Top-Left (100,900)</button>
+        <button data-x="900" data-y="900">Top-Right (900,900)</button>
+        <button data-x="900" data-y="100">Bottom-Right (900,100)</button> -->
+
+    </div>
+</header>
+
+<main class="stage" id="stage">
+    <div id="g">&#xE000;</div>
+    <div class="hint">Move the mouse: X→rxad, Y→ryad (100→900). Click buttons for corners.</div>
+</main>
+
+<script>
+    // put near your other config
+    const MIN = 100, MAX = 900;
+    const INNER = 0.6;   // % of width/height used for full mapping (0.6 = middle 60%)
+    const PAD = (1 - INNER) / 2; // left/right (and top/bottom) pad as fraction
+
+    function normWithVirtualMargins(x, y, rect) {
+        let nx = (x - rect.left) / rect.width;   // 0..1
+        let ny = (y - rect.top) / rect.height;  // 0..1
+        // clamp to inner band
+        nx = Math.min(1 - PAD, Math.max(PAD, nx));
+        ny = Math.min(1 - PAD, Math.max(PAD, ny));
+        // remap PAD..(1-PAD) -> 0..1
+        nx = (nx - PAD) / INNER;
+        ny = (ny - PAD) / INNER;
+        return { nx, ny };
+    }
+
+    stage.addEventListener('mousemove', (e) => {
+        const r = stage.getBoundingClientRect();
+        const { nx, ny } = normWithVirtualMargins(e.clientX, e.clientY, r);
+        const rxad = Math.round(MIN + nx * (MAX - MIN));
+        const ryad = Math.round(MIN + (1 - ny) * (MAX - MIN)); // Y up
+        g.style.fontVariationSettings = `"rxad" ${rxad}, "ryad" ${ryad}`;
+        ro.textContent = `rxad: ${rxad} | ryad: ${ryad}`;
+    });
+
+
+
+    document.querySelectorAll('button[data-x]').forEach(b => {
+        b.addEventListener('click', () => {
+            apply(parseInt(b.dataset.x, 10), parseInt(b.dataset.y, 10));
+        });
+    });
+
+    apply(MIN, MIN); // start at "regular"
+</script>
