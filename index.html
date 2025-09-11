@@ -116,6 +116,24 @@
         ro.textContent = `rxad: ${rxad} | ryad: ${ryad}`;
     });
 
+    stage.addEventListener('touchmove', (e)=>{
+  if(!e.touches.length) return;
+  const t = e.touches[0];   // first finger
+  const r = stage.getBoundingClientRect();
+
+  // normalize 0..1
+  const nx = Math.min(1, Math.max(0, (t.clientX - r.left) / r.width));
+  const ny = Math.min(1, Math.max(0, (t.clientY - r.top)  / r.height));
+
+  // map to your axis ranges (Y flipped so top=900, bottom=100)
+  const rxad = Math.round(MIN + nx*(MAX-MIN));
+  const ryad = Math.round(MIN + (1 - ny)*(MAX-MIN));
+
+  g.style.fontVariationSettings = `"rxad" ${rxad}, "ryad" ${ryad}`;
+  ro.textContent = `rxad: ${rxad} | ryad: ${ryad}`;
+}, {passive:true});
+
+
 
 
     document.querySelectorAll('button[data-x]').forEach(b => {
